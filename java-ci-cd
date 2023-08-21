@@ -1,0 +1,54 @@
+name: Containerized Java CI/CD
+
+on:
+  push:
+    branches:
+      - main  #Change this to the appropriate branch
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # Change to the desired Java version
+
+      - name: Build with Maven
+        run: mvn clean package
+
+  dockerize:
+    name: Build Docker Image
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # Change to the desired Java version
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Build Docker image
+        run: docker build -t my-java-app .
+
+      - name: Log into Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker image
+        run: |
+          docker tag my-java-app ${{ secrets.DOCKERHUB_USERNAME }}/my-java-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-java-app:latest
